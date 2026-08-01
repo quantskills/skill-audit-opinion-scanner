@@ -1,0 +1,21 @@
+{
+  "name": "skill-audit-opinion-scanner",
+  "version": "0.1.0",
+  "description": "财务报告审计意见风险扫描。按季度拉取沪深300 A股审计意见，规则映射到风险等级，输出排雷清单。",
+  "type": "build",
+  "category": "fundamental",
+  "entry": "scripts/scan.py",
+  "data_sources": [
+    "get_audit_opinion",
+    "get_index_weights",
+    "get_stock_detail",
+    "get_last_trade_date"
+  ],
+  "outputs": ["csv", "markdown"],
+  "tags": ["audit", "risk", "fundamental", "csi300", "a-stock"],
+  "roadmap": {
+    "v0.1": "规则过滤 - 审计意见 → 风险等级映射 (current)",
+    "v0.2": "ML预测 - 财务指标预测非标意见概率",
+    "v0.3": "LLM语义 - 审计报告全文深度分析"
+  }
+}
