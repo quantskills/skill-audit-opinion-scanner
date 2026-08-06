@@ -5,6 +5,12 @@ stock will receive a non-standard audit opinion in the next annual report (Q4).
 This is an *ex-ante* prediction: it only uses data available BEFORE the audit
 report is released.
 
+**Experimental feature** — The training dataset currently contains only ~53
+positive (non-standard) samples.  AUC ≈ 0.788 is valid but moderate; this model
+is best used as a supplementary screening signal, NOT as a definitive audit-risk
+conclusion.  Financial-sector stocks are excluded from training due to different
+accounting structures and prediction reliability is unknown for those symbols.
+
 Usage:
     # Train model on all available data
     python scripts/predict.py --train

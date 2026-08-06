@@ -47,6 +47,12 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 FINA_CACHE = CACHE_DIR / "fina_cache.parquet"
 INDU_CACHE = CACHE_DIR / "fina_industry.parquet"
 
+# ── Cache freshness constants ─────────────────────────────────────
+# Industry classification changes very infrequently; 7 days is safe.
+INDU_CACHE_MAX_AGE_HOURS = 168  # 7 days
+# Financial data is quarterly — rebuild once per day at most.
+FINA_CACHE_MAX_AGE_HOURS = 24   # 1 day
+
 # ── 25 key financial fields ─────────────────────────────────────────────
 # Selected from get_fina_reports' 320+ columns for maximum analytical value
 # with minimal redundancy.
@@ -240,6 +246,14 @@ def _save_parquet(df: pd.DataFrame, path: Path) -> None:
     print(f"[ok] {path.name}: {len(df)} rows, {n_stocks} stocks", file=sys.stderr)
 
 
+def _cache_is_fresh(path: Path, max_age_hours: int) -> bool:
+    """Return True if the cache file exists and is within max_age_hours."""
+    if not path.exists():
+        return False
+    age_sec = time.time() - path.stat().st_mtime
+    return age_sec <= max_age_hours * 3600
+
+
 def _cache_summary(df: pd.DataFrame, path: Path) -> dict:
     if df.empty:
         return {"rows": 0, "stocks": 0, "cols": 0, "quarters": [], "mb": 0, "path": path}
@@ -364,15 +378,18 @@ def main() -> int:
         print(f"[error] {e}", file=sys.stderr)
         return 1
 
-    # ── Industry (always refresh — single 0.2s call) ──
+    # ── Industry (always refresh — single 0.2s call, skip if fresh) ──
     if not args.industry_only:
-        print("[fetch] industry classification...", file=sys.stderr)
-        try:
-            indu = fetch_industry()
-            if not indu.empty:
-                _save_parquet(indu, INDU_CACHE)
-        except Exception as e:
-            print(f"[warn] industry: {e}", file=sys.stderr)
+        if _cache_is_fresh(INDU_CACHE, INDU_CACHE_MAX_AGE_HOURS) and not args.incremental:
+            print("[info] industry cache is fresh (within 7d), skipping", file=sys.stderr)
+        else:
+            print("[fetch] industry classification...", file=sys.stderr)
+            try:
+                indu = fetch_industry()
+                if not indu.empty:
+                    _save_parquet(indu, INDU_CACHE)
+            except Exception as e:
+                print(f"[warn] industry: {e}", file=sys.stderr)
 
     if args.industry_only:
         return 0
@@ -389,6 +406,10 @@ def main() -> int:
 
     # ── Existing cache ──
     existing = _load_parquet(FINA_CACHE)
+    if not args.incremental and _cache_is_fresh(FINA_CACHE, FINA_CACHE_MAX_AGE_HOURS):
+        print(f"[info] financial cache is fresh (within {FINA_CACHE_MAX_AGE_HOURS}h), use --incremental to force refresh",
+              file=sys.stderr)
+        return 0
     if args.incremental and not existing.empty:
         existing_qs = set(existing["quarter"].unique())
         new_qs = [qq for qq in target_qs if qq not in existing_qs]

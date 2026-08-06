@@ -157,3 +157,48 @@ def get_unknown_opinion_values(opinion_series: "pd.Series") -> list[str]:
     known = set(OPINION_RISK_MAP.keys())
     seen = set(opinion_series.dropna().astype(str).str.lower().unique())
     return sorted(seen - known)
+
+
+def suggest_mapping(unknown: str) -> str | None:
+    """Suggest the closest known opinion value for an unknown one.
+
+    Uses simple prefix/word-overlap heuristics — fast and interpretable.
+    Returns the best-matching known key, or None if no plausible match.
+    """
+    if not unknown or not isinstance(unknown, str):
+        return None
+    u = unknown.strip().lower()
+    if not u:
+        return None
+    known_keys = list(OPINION_RISK_MAP.keys())
+    # 1. Exact prefix match (best)
+    for k in known_keys:
+        if u.startswith(k):
+            return k
+        if k.startswith(u):
+            return k
+    # 2. Token overlap: count shared tokens
+    best, best_score = None, 0
+    u_tokens = set(u.replace("-", "_").replace(" ", "_").split("_"))
+    for k in known_keys:
+        k_tokens = set(k.replace("-", "_").replace(" ", "_").split("_"))
+        score = len(u_tokens & k_tokens)
+        if score > best_score:
+            best_score = score
+            best = k
+    if best_score >= 3:
+        return best
+    return None
+
+
+def classify_opinion_with_suggestion(opinion: str) -> tuple[int, str | None]:
+    """Like classify_opinion, but returns (level, suggested_known_key) for unknowns.
+
+    When the opinion is unknown, the suggestion helps the user decide where
+    to place it in OPINION_RISK_MAP.
+    """
+    level = classify_opinion(opinion)
+    if level != RISK_UNKNOWN:
+        return level, None
+    suggestion = suggest_mapping(opinion)
+    return level, suggestion

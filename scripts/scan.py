@@ -223,10 +223,18 @@ def main() -> int:
     summary = rules.summarize(classified)
     unknown_ops = rules.get_unknown_opinion_values(classified["opinion"])
     if unknown_ops:
+        parts = []
+        for op in unknown_ops:
+            suggestion = rules.suggest_mapping(op)
+            if suggestion:
+                suggested_level = rules.classify_opinion(suggestion)
+                parts.append(f"{op!r} → maybe {suggestion!r} (level={suggested_level})")
+            else:
+                parts.append(f"{op!r} — no suggestion")
         print(
-            f"[warn] unknown opinion values detected: {unknown_ops}. "
-            f"These are classified as 'needs_review'. "
-            f"After verifying real data, add them to OPINION_RISK_MAP in scripts/rules.py.",
+            f"[warn] unknown opinion values detected. "
+            f"After verifying real data, add them to OPINION_RISK_MAP in scripts/rules.py.\n"
+            f"       Suggestions: {'; '.join(parts)}",
             file=sys.stderr,
         )
 
