@@ -125,3 +125,6 @@ pytest tests/ -v
 | 无审计报告 PDF/全文分析 | 仅基于结构化 `opinion` 字段 |
 | 不支持实时数据 | 仅做时点分析 |
 | 金融企业预测可靠性未知 | 银行/保险财务结构特殊 |
+
+
+Pandadata 兼容维护：[abgyjaguo](https://github.com/abgyjaguo)，保留原项目作者署名。

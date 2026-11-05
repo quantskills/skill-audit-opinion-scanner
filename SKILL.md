@@ -645,3 +645,7 @@ candidates = candidates[~candidates["symbol"].isin(blacklist)]
 6. **实时数据不支持**：所有分析基于缓存数据（时点），不支持盘中实时财务指标更新
 7. **行业中位计算采样**：深度报告中，行业百分位对比采样同行业前 30 只股票以控制计算时间
 8. **非金融企业部分科目为空**：银行、保险等金融企业的 `is_gross_profit`、`bs_inventory` 等科目天然为空
+
+## Pandadata compatibility
+
+[Pandadata 1.0.6 compatibility](references/pandadata-compatibility.md) — exact SDK baseline, validation scope, and shared guidance for all supported agent runtimes.

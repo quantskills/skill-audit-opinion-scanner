@@ -106,3 +106,6 @@ pytest tests/ -v
 | No audit PDF/full-text analysis | Structured `opinion` field only |
 | No real-time data support | Point-in-time analysis only |
 | Financial sector prediction uncertain | Banks/insurers have special financial structures |
+
+
+Pandadata compatibility maintenance: [abgyjaguo](https://github.com/abgyjaguo). Existing authorship is retained.
